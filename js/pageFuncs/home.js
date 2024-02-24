@@ -66,9 +66,9 @@ export function handle_subscription_drawer({ setHoursArr }) {
 
   if (newState.data.dataChanged) {
     Store.dispatch(set_dataArray({ reset_dataChanged: true }))
-    console.log('* Updating arrayy *', { dataArray: newState.data.dataArray, clock: newState.ui.clock })
-    // setHoursArr([{ Id: 10, Start: 1708564480000, End: 1708564990000 }])
-    // FIXME after clock in , clock out, edit does not update this even though newState is correct
+    console.log('Updating array.')
+
+    // BUG after clock in , clock out, edit does not update this even though newState is correct
     setHoursArr([...newState.data.dataArray])
   }
 }
@@ -238,8 +238,6 @@ export const master_changeClockState = async ({ flag_active, setActiveClock, set
   flag_active
     ? await clock_In()
     : await clock_Out()
-
-  // XXX Update local hours array to include newly clocked state
 
 }
 export const master_deleteEntry = async ({ index, item, setPockets }) => {

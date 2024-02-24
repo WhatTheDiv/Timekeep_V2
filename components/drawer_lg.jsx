@@ -178,10 +178,6 @@ function render_hoursSection({
   hoursArr,
   setHoursArr,
 }) {
-  /* 
-  [x] press_hourItem()
-  [x] press_submit_addOrModifyItem()
-  */
   const render_icon = (index, item) => {
     const nav = pockets.hours.navigation;
     const selected = pockets.hours.selected;
@@ -608,16 +604,13 @@ function press_hourItem(i, pockets, setPockets) {
   setPockets((draft) => {
     switch (pockets.hours.navigation) {
       case "view":
-        draft.hours.selected = null; // @todo for now
-        break;
-      case "add":
-        draft.hours.selected = null; // @todo for now
+        draft.stats.selected = index;
         break;
       case "edit":
-        draft.hours.selected = index;
-        break;
       case "delete":
         draft.hours.selected = index;
+        break;
+      default:
         break;
     }
   });

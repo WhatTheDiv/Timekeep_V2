@@ -110,7 +110,7 @@ export function ticker_addOneTick(prev) {
 }
 
 export function ticker_getTicks(millis) {
-  // XXX
+  // TODO
   const { hours, minutes, seconds } = millis_toSecondsMinutesHours(millis)
   return { hours, minutes, seconds }
 }
