@@ -1,7 +1,7 @@
 import { combineReducers } from "redux";
-import ui from "./ui"
-import setup from './setup'
-import data from './data'
+import ui from "./ui.js"
+import setup from './setup.js'
+import data from './data.js'
 
 // Combine all reducers here
 

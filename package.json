@@ -7,7 +7,8 @@
     "dev": "expo start --dev",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "mocha ./js/test/test_main.mjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.21.0",
@@ -32,7 +33,11 @@
     "use-immer": "^0.9.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@types/sinon": "^17.0.3",
+    "chai": "^5.1.0",
+    "mocha": "^10.3.0",
+    "sinon": "^17.0.1"
   },
   "private": true
 }

@@ -1,10 +1,10 @@
-import Store from "../Store/store";
+import Store from "../Store/store.js";
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Alert } from 'react-native'
-import { delete_everythingFromDatabase, getData_totalLengthOfDatabase } from "../utils/database";
-import { reset_ui, set_clock } from "../Store/ui";
-import { reset_setup } from "../Store/setup";
-import { reset_data } from "../Store/data";
+import { delete_everythingFromDatabase, getData_totalLengthOfDatabase } from "../utils/database.js";
+import { reset_ui, set_clock } from "../Store/ui.js";
+import { reset_setup } from "../Store/setup.js";
+import { reset_data, set_settings } from "../Store/data.js";
 
 export function check_OutOfOrder() {
   const state = Store.getState().setup
@@ -94,6 +94,12 @@ export const save_settings = async (settingsObject) => {
       else resolve(true)
     })
   })
+}
+
+export const togglePrivacyMode = () => {
+  const pvcy = Store.getState().data.settings.privacy
+  console.log('setting privacy mode from ', pvcy, ' to : ', !pvcy)
+  Store.dispatch(set_settings({ privacy: !pvcy }))
 }
 
 

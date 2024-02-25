@@ -1,11 +1,11 @@
 import * as animations from '../animations/mainAnimations'
-import * as database from '../utils/database'
-import { ticker_getTicks, ticker_addOneTick } from '../utils/format'
-import Store from "../Store/store"
-import { set_clock } from '../Store/ui'
-import { delete_withId } from '../utils/database'
-import { set_dataArray, set_settings } from '../Store/data'
-import { sortDatabaseArray_newestStartTimesToOldest, whereToInsertIntoDbArr } from '../utils/clock'
+import * as database from '../utils/database.js'
+import { ticker_getTicks, ticker_addOneTick } from '../utils/format.js'
+import Store from "../Store/store.js"
+import { set_clock } from '../Store/ui.js'
+import { delete_withId } from '../utils/database.js'
+import { set_dataArray, set_settings } from '../Store/data.js'
+import { sortDatabaseArray_newestStartTimesToOldest, whereToInsertIntoDbArr } from '../utils/clock.js'
 import { save_settings } from './global'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -72,6 +72,13 @@ export function handle_subscription_drawer({ setHoursArr }) {
     setHoursArr([...newState.data.dataArray])
   }
 }
+// export function handle_subscription_stats({ setPrivacyMode, privacyMode }) {
+//   console.log('state change in stats: ', { privacyMode, StorePrivacy: Store.getState().data.settings.privacy })
+//   if (privacyMode !== Store.getState().data.settings.privacy) {
+//     console.log('setting privacy mode to : ', Store.getState().data.settings.privacy)
+//     setPrivacyMode(Store.getState().data.settings.privacy)
+//   }
+// }
 
 /*   Press Functions   */
 export const press_changeClockState = () => {
@@ -241,6 +248,7 @@ export const master_changeClockState = async ({ flag_active, setActiveClock, set
 
 }
 export const master_deleteEntry = async ({ index, item, setPockets }) => {
+  // BUG deleted entries not being automatically reflected in data array
   console.log("Master, Deleting item: ", item);
 
   // Delete item from database
@@ -341,14 +349,12 @@ export const master_editEntry = async ({
   // @ts-ignore
   if (newEndTime) options.edits.push({ key: "End", value: endTime });
 
-  console.log('changes made: ', { newStartTime, newEndTime, startTime, endTime, edits: options.edits })
-
   // Update entry in database
   const { updatedEntry } = await database.storeData_UpdateTimeItem({
     id: Id,
     keyValuePairs: options.edits,
   });
-  console.log('New item after edit: ', updatedEntry)
+  // console.log('New item after edit: ', updatedEntry) /Users/patcannon/Documents/Projects/Timekeep_V2/node_modules/.bin/mocha
 
 
   const mutatedArray = [...dataArray]
@@ -358,7 +364,7 @@ export const master_editEntry = async ({
 
   mutatedArray.splice(index_moveTo, 0, updatedEntry)
 
-  console.log('index_moveTo: ', index_moveTo)
+  // console.log('index_moveTo: ', index_moveTo)
 
   // Replace & sort entry into Store
   Store.dispatch(set_dataArray({

@@ -1,3 +1,5 @@
+import Store from '../Store/store'
+
 
 export function dateObj_ToMillis({ year, month, day, hour, minute, ampm }) {
   const getHour = () => {
@@ -25,6 +27,7 @@ export function millis_ToDateObj(millis) {
     year: d.getFullYear(),
     month: d.getMonth(),
     day: d.getDay(),
+    date: d.getDate(),
     hour: d.getHours(),
     minute: d.getMinutes(),
     second: d.getSeconds(),
@@ -70,7 +73,8 @@ export function secondsMinutesHours_toString({ hours, minutes, seconds }) {
   else return seconds + s;
 }
 
-export function millis_toSecondsMinutesHoursString(millis) {
+// TODO add trim option to cut '0 Minutes' from showing
+export function millis_toSecondsMinutesHoursString(millis, { trim = false }) {
   return secondsMinutesHours_toString(
     millis_toSecondsMinutesHours(millis)
   )
@@ -91,6 +95,8 @@ export function hoursMilitary_ToStandardWithAmPm(militaryHour) {
     time.hour = militaryHour - 12;
     time.ampm = "PM";
   }
+
+  // { hour, ampm }
   return time;
 }
 
@@ -142,4 +148,17 @@ export const timeArrays = {
   daysInMonths: [
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
   ]
+}
+
+export const dollarsPerPeriod = (period) => {
+  const salary = Store.getState().ui.userData.salary
+  if (period === 'yearly')
+    return salary
+  else if (period === 'weekly')
+    return salary / 52
+  else if (period === 'daily')
+    return salary / 52 / 5
+  else if (period === 'hourly')
+    return salary / 52 / 40
+  else return salary
 }

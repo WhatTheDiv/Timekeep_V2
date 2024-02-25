@@ -1,6 +1,7 @@
-import * as db from "../utils/database"
+import * as db from "./database.js"
 import { Alert } from 'react-native'
-import * as format from './format'
+import * as Format from './format.js'
+import Store from '../Store/store.js'
 
 export let intervalTickerFuncRef = -1
 export let lastValues = { start: -1, end: -1 }
@@ -17,13 +18,13 @@ export async function initialize() {
           }
         };
         return new Promise((resolve2, reject) => {
-          const s = format.millis_ToDateObj(dataEntry.Start);
+          const s = Format.millis_ToDateObj(dataEntry.Start);
           const month = s.month + 1;
-          const hour = format.hoursMilitary_ToStandardWithAmPm(s.hour);
+          const hour = Format.hoursMilitary_ToStandardWithAmPm(s.hour);
           const string =
             month +
             "/" +
-            s.day +
+            s.date +
             " at " +
             hour.hour +
             ":" +
@@ -150,6 +151,109 @@ export const whereToInsertIntoDbArr = ({ dbArray, number }) => {
   if (index >= 0) return index
   else return dbArray.length
 }
+
+export const filterDatabase_WeekSegment_givenFlag = (flag_millis) => {
+  const getHowManyDaysToRemove = ({ beginningOfPeriod_dayIndex, flag }) => {
+    const currentDayIndex = flag.getDay()
+    //         6       >           1
+    if (currentDayIndex > beginningOfPeriod_dayIndex)
+      return (
+        //      6       - (      6         -           1               )
+        currentDayIndex - beginningOfPeriod_dayIndex
+      );
+    else if (currentDayIndex < beginningOfPeriod_dayIndex)
+      return 7 - beginningOfPeriod_dayIndex + currentDayIndex;
+    else return 0;
+  };
+
+  const state = Store.getState().data
+  const workWeekStart = state.settings.workWeekStart
+  const databaseArray = state.dataArray
+  const flag = new Date(flag_millis)
+
+  const timeOfDay_millis = getTimeOfDay_millis(flag);
+  const daysToRemove_days = getHowManyDaysToRemove({ beginningOfPeriod_dayIndex: workWeekStart, flag })
+  const oneDayToMillis = 1 * 24 * 60 * 60 * 1000;
+  const daysToRemove_millis = oneDayToMillis * daysToRemove_days;
+  const millisToRemove = daysToRemove_millis + timeOfDay_millis - 1
+
+  const beginningOfWeek_millis = flag.getTime() - millisToRemove
+  const endOfWeek_millis = (7 * oneDayToMillis) + beginningOfWeek_millis
+
+  const array = databaseArray.filter(item => {
+    return item.Start >= beginningOfWeek_millis && item.Start < endOfWeek_millis
+  }
+  )
+
+  return { beginningOfWeek_millis, endOfWeek_millis, array }
+}
+
+export const getTimeOfDay_millis = (flag) => {
+  // flag = new Date()
+  const currentHours = flag.getHours();
+  const currentMinutes = flag.getMinutes();
+  const currentSeconds = flag.getSeconds();
+
+  const currentSeconds_ToMillis = currentSeconds * 1000;
+  const currentMinutes_ToMillis = currentMinutes * 60 * 1000;
+  const currentHours_ToMillis = currentHours * 60 * 60 * 1000;
+
+  return (
+    currentSeconds_ToMillis +
+    currentMinutes_ToMillis +
+    currentHours_ToMillis
+  );
+}
+
+export const findHourlyEquivalent_factoringOt_OneWeek = (array) => {
+  const dollarsPerWeek = Format.dollarsPerPeriod('weekly')
+
+  const { minutes, hours } = Format.millis_toSecondsMinutesHours(
+    array.reduce(
+      (total, curr) => total + (Number(curr.End) - Number(curr.Start)),
+      0
+    )
+  );
+  const hoursThisWeek = hours + minutes / 60;
+
+  if (hoursThisWeek <= 40) return dollarsPerWeek / hoursThisWeek
+  else {
+    const ot = hoursThisWeek - 40
+    return dollarsPerWeek / (40 + (1.5 * ot))
+  }
+}
+
+export const getTotalWeeklyHours = (flag_millis) => {
+  const { beginningOfWeek_millis, endOfWeek_millis, array } =
+    filterDatabase_WeekSegment_givenFlag(flag_millis);
+  const { hours, minutes } = Format.millis_toSecondsMinutesHours(array.reduce(
+    (total, current) => total + current.End - current.Start,
+    0
+  ))
+
+  const total = hours + (minutes / 60)
+  return { start: beginningOfWeek_millis, end: endOfWeek_millis, total }
+}
+
+// TODO factor holidays, PTO, sick days here
+export const getAveragesYtd = () => {
+  const rangeStart = Store.getState().data.settings.averagesRangeStart
+  const rangeEnd = Store.getState().data.settings.averagesRangeEnd
+  const statsArr = []
+  const flag_end = rangeEnd === 'current' ? Date.now() : rangeEnd
+  let flag_start = rangeStart
+
+  while (flag_start <= flag_end) {
+    flag_start = statsArr[statsArr.push(getTotalWeeklyHours(flag_start)) - 1].end + 1000
+  }
+
+  // getter is finding dates before beginning of year, maybe not an issue
+  // getter is finding dates in range from friday - friday, i think ? 
+
+  console.log('***** statsArr: ', statsArr)
+  return statsArr
+}
+
 
 
 

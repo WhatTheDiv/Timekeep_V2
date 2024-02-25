@@ -14,7 +14,7 @@ import { Picker } from "@react-native-picker/picker";
 import { useImmer } from "use-immer";
 import { router } from "expo-router";
 
-import Store from "../js/Store/store";
+import Store from "../js/Store/store.js";
 
 export default () => {
   const [setup, setSetup] = useState(Store.getState().setup);

@@ -1,14 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useDispatch } from 'react-redux'
-import { set_variablesConfigured, set_setup } from '../Store/setup'
-import { set_clock, set_user } from '../Store/ui'
+import { set_variablesConfigured, set_setup } from '../Store/setup.js'
+import { set_clock, set_user } from '../Store/ui.js'
 import { init_settings } from '../pageFuncs/global'
-import { set_dataArray, set_settings } from '../Store/data'
-import Store from '../Store/store'
-import * as db from "../utils/database"
-import * as clock from "../utils/clock"
+import { set_dataArray, set_settings } from '../Store/data.js'
+import Store from '../Store/store.js'
+import * as db from "../utils/database.js"
+import * as clock from "../utils/clock.js"
 import * as animations from '../animations/mainAnimations'
-import { sortDatabaseArray_newestStartTimesToOldest } from '../utils/clock'
+import { sortDatabaseArray_newestStartTimesToOldest } from '../utils/clock.js'
 
 
 let _av
@@ -112,6 +112,9 @@ async function configureVariables(av) {
         return []
       })
     console.log('Initialized data. (', data.length, ') - ', data.length >= 1 ? data[data.length - 1] : '')
+    // console.log('all data between ', { start: settings.averagesRangeStart, end }, ': ', data)
+
+    // console.log('all data: ', await db.getData_all())
 
     // Initialize Clock 
     const clockSet = await clock.initialize()

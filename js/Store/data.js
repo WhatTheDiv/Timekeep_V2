@@ -3,11 +3,12 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   dataArray: [],
   settings: {
-    averagesRangeStart: Number(new Date(new Date().getFullYear(), 0, 0, 0, 0, 0).getTime()),
+    averagesRangeStart: new Date(new Date().getFullYear(), 0, 1).getTime(),
     averagesRangeEnd: 'current',
     workWeekStart: 1,
     hoursTab_open: true,
     statsTab_open: true,
+    privacy: false,
   },
   settingsChanged: false,
   dataChanged: false,
@@ -18,6 +19,7 @@ const slice = createSlice({
   initialState,
   reducers: {
     set_dataArray: (state, action) => {
+      console.log('calling set_dataArray')
       const pl = action.payload
       // Replace all --- payload = { replaceAll: true, data: [...] }
       if (pl.replaceAll && pl.data)
@@ -80,6 +82,10 @@ const slice = createSlice({
         state.settings.hoursTab_open = action.payload.hoursTab_open
 
       if (action.payload.statsTab_open !== undefined) state.settings.statsTab_open = action.payload.statsTab_open
+
+      if (action.payload.privacy !== undefined) {
+        state.settings.privacy = action.payload.privacy
+      }
 
       if (action.payload.reset_settingsChanged)
         state.settingsChanged = false

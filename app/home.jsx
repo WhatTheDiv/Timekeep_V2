@@ -2,14 +2,14 @@ import { Pressable, StyleSheet, Text, View, Image } from "react-native";
 import React, { useEffect, useState } from "react";
 import ErrorFallback from "./errorFallback";
 import { check_OutOfOrder } from "../js/pageFuncs/global";
-import Store from "../js/Store/store";
+import Store from "../js/Store/store.js";
 import Title from "../components/title";
 import BigButton from "../components/bigButton";
 import Drawer from "../components/drawer";
 import Counter from "../components/counter";
 import { startup, handle_subscription_home } from "../js/pageFuncs/home";
 import { Link } from "expo-router";
-import { icons } from "../js/utils/icons";
+import { icons } from "../js/utils/icons.js";
 import { useImmer } from "use-immer";
 
 export default function home() {

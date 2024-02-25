@@ -10,23 +10,23 @@ import {
 import React, { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import gStyles from "../styles/globalStyle";
-import { sortDatabaseArray_newestStartTimesToOldest } from "../js/utils/clock";
+import { sortDatabaseArray_newestStartTimesToOldest } from "../js/utils/clock.js";
 import {
   dateObj_ToMillis,
   millis_toMonthAndDayStrings,
   millis_toSecondsMinutesHoursString,
   timeArrays,
-} from "../js/utils/format";
-import { icons } from "../js/utils/icons";
+} from "../js/utils/format.js";
+import { icons } from "../js/utils/icons.js";
 import { Picker } from "@react-native-picker/picker";
-import Store from "../js/Store/store";
+import Store from "../js/Store/store.js";
 import {
   handle_subscription_drawer,
   master_addEntry,
   master_deleteEntry,
   master_editEntry,
 } from "../js/pageFuncs/home";
-import { set_settings } from "../js/Store/data";
+import { set_settings } from "../js/Store/data.js";
 import Stats from "./stats";
 
 const now = new Date();
@@ -86,7 +86,7 @@ export default ({ pockets, setPockets }) => {
       <View style={[styles.pocketContainer, hoursDynamicStyle]}>
         <Pressable
           style={styles.pocketHeader_container}
-          onPress={() => changeTabSection("hours", setPockets, pockets)}
+          onPress={() => press_changeTabSection("hours", setPockets, pockets)}
         >
           <Text style={[styles.pocketHeader, gStyles.text_small]}>Hours</Text>
         </Pressable>
@@ -141,7 +141,7 @@ export default ({ pockets, setPockets }) => {
       <View style={[styles.pocketContainer, statsDynamicStyle]}>
         <Pressable
           style={styles.pocketHeader_container}
-          onPress={() => changeTabSection("stats", setPockets, pockets)}
+          onPress={() => press_changeTabSection("stats", setPockets, pockets)}
         >
           <Text style={[styles.pocketHeader, gStyles.text_small]}>Stats</Text>
         </Pressable>
@@ -155,7 +155,7 @@ export default ({ pockets, setPockets }) => {
   );
 };
 
-/*    Render Functions     */
+/*    Render    */
 function render_loading_hoursSection() {
   return (
     <View style={styles.loadingContainer}>
@@ -491,7 +491,7 @@ function render_hoursSection({
       const { date, day } = millis_toMonthAndDayStrings(item.Start);
       const diff = Number(item.End) - Number(item.Start);
 
-      const hours = millis_toSecondsMinutesHoursString(diff);
+      const hours = millis_toSecondsMinutesHoursString(diff, { trim: false });
 
       const sel = pockets.hours.selected;
       return (
@@ -570,21 +570,21 @@ function setup_state({ setPockets }) {
     draft.stats.loading = false;
   });
 }
-function changeTabSection(newTab, setPockets, pockets) {
+
+/*    OnPress    */
+function press_changeTabSection(newTab, setPockets, pockets) {
   const key = newTab === "hours" ? "hoursTab_open" : "statsTab_open";
   const value = !pockets[newTab].open;
 
   Store.dispatch(set_settings({ [key]: value }));
 
-  // Settings are saved in subscription in home.js @ handle_subscription()
+  // Settings are saved in subscription in home.js @ handle_subscription() after dispatch
 
   setPockets((draft) => {
     draft[newTab].open = value;
-    draft[newTab === "hours" ? "stats" : "hours"];
+    if (newTab === "stats" && !value) draft.stats.selected = null;
   });
 }
-
-/*    OnPress Responses    */
 function press_navigation(selection, setPockets) {
   setPockets((draft) => {
     draft.hours.navigation = selection;
@@ -593,26 +593,15 @@ function press_navigation(selection, setPockets) {
   });
 }
 function press_hourItem(i, pockets, setPockets) {
-  const index =
-    !pockets.hours.selected && pockets.hours.selected !== 0
-      ? i
-      : pockets.hours.selected === i
-      ? null
-      : i;
+  const getIndex = (nav, p, _i) => {
+    return p[nav].selected === null ? _i : p[nav].selected === _i ? null : _i;
+  };
 
-  // perform action based on pockets.hours.navigation
+  // navigation ---> 'view' || 'edit' || 'delete'
+  const cat = pockets.hours.navigation === "view" ? "stats" : "hours";
+
   setPockets((draft) => {
-    switch (pockets.hours.navigation) {
-      case "view":
-        draft.stats.selected = index;
-        break;
-      case "edit":
-      case "delete":
-        draft.hours.selected = index;
-        break;
-      default:
-        break;
-    }
+    draft[cat].selected = getIndex(cat, pockets, i);
   });
 }
 function press_icon({ index, item, pockets, setPockets, setAddHoursValues }) {
