@@ -250,8 +250,18 @@ export const getAveragesYtd = () => {
   // getter is finding dates before beginning of year, maybe not an issue
   // getter is finding dates in range from friday - friday, i think ? 
 
-  console.log('***** statsArr: ', statsArr)
+  // console.log('***** statsArr: ', statsArr)
   return statsArr
+}
+
+export const updateClockOnAppRestored = ({ setTicker }) => {
+  console.log("App Resumed!!!! ");
+  const clock = Store.getState().ui.clock
+  if (clock.activeClockStartTime_millis < 0) return
+
+  const startTime = clock.activeClockStartTime_millis
+  const currentTime = Date.now()
+  setTicker(Format.millis_toSecondsMinutesHours(currentTime - startTime))
 }
 
 

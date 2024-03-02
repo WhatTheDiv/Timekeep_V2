@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, Text, View, Image } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  AppState,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import ErrorFallback from "./errorFallback";
 import { check_OutOfOrder } from "../js/pageFuncs/global";
@@ -11,6 +18,7 @@ import { startup, handle_subscription_home } from "../js/pageFuncs/home";
 import { Link } from "expo-router";
 import { icons } from "../js/utils/icons.js";
 import { useImmer } from "use-immer";
+import { updateClockOnAppRestored } from "../js/utils/clock";
 
 export default function home() {
   if (check_OutOfOrder()) return <ErrorFallback />;
@@ -39,6 +47,11 @@ export default function home() {
   const [ticker, setTicker] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    AppState.addEventListener("change", () => {
+      if (AppState.currentState === "active")
+        updateClockOnAppRestored({ setTicker });
+    });
+
     Store.subscribe(() =>
       handle_subscription_home({
         setActiveClock,
