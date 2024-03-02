@@ -77,7 +77,7 @@ function render_selection({ stats }, privacyMode) {
     const hourlyRate =
       Clock.findHourlyEquivalent_factoringOt_OneWeek(array).toFixed(2);
 
-    return { regular, ot, hourlyRate };
+    return { regular, ot: ot.toFixed(1), hourlyRate };
   };
 
   const currentItem = Store.getState().data.dataArray[stats.selected];
@@ -201,8 +201,8 @@ function render_ytd(privacyMode) {
     const actual_salary = arph * 40 * 52;
 
     return {
-      total_OtHours,
-      total_hours,
+      total_OtHours: total_OtHours.toFixed(1),
+      total_hours: total_hours.toFixed(1),
       average_hoursPerWeek: average_hoursPerWeek.toFixed(1),
       average_OtHoursPerWeek: average_OtHoursPerWeek.toFixed(1),
       shouldBe_RatePerHour: shouldBe_RatePerHour.toFixed(2),
