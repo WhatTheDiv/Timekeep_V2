@@ -317,12 +317,12 @@ export const master_editEntry = async ({
 
   const dataArray = Store.getState().data.dataArray
 
-  if (flag_clockOut) {
-    console.log('finding start time ', startTime, ' in array ', dataArray)
-    console.log('finding id: ', (dataArray.find(element => element.Start === startTime).Id))
-  } else {
-    console.log('Getting id from pockets.hours.edit: ', pockets.hours.edit)
-  }
+  // if (flag_clockOut) {
+  //   console.log('finding start time ', startTime, ' in array ', dataArray)
+  //   console.log('finding id: ', (dataArray.find(element => element.Start === startTime).Id))
+  // } else {
+  //   console.log('Getting id from pockets.hours.edit: ', pockets.hours.edit)
+  // }
 
   // If clocking out, get Id
   const { Id } = flag_clockOut ? dataArray.find(element => element.Start === startTime) : { Id: pockets.hours.edit }
