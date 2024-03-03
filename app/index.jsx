@@ -12,7 +12,8 @@ import gStyle from "../styles/globalStyle";
 import { set_Store } from "../js/pageFuncs/index";
 import { Picker } from "@react-native-picker/picker";
 import { useImmer } from "use-immer";
-import { router } from "expo-router";
+
+import { handleSubscription_index } from "../js/pageFuncs/subscriptions.js";
 
 import Store from "../js/Store/store.js";
 
@@ -40,11 +41,13 @@ export default () => {
   const firstRun = !setup.loading && !setup.hasUserData && !setup.setup;
 
   useEffect(() => {
-    const subscription = Store.subscribe(() => handle_subscription(setSetup));
-
     get_Precheck(av);
 
-    return subscription;
+    const subscribe = Store.subscribe(() => handleSubscription_index(setSetup));
+    return () => {
+      console.log("Cleanup index ... ");
+      subscribe();
+    };
   }, []);
 
   if (firstRun) return render_loadingPage();
@@ -66,8 +69,6 @@ const get_Precheck = async (av) => {
 
 // RENDER FUNCTIONS
 const render_starterPage = (form, setForm) => {
-  // return <Text>Nothing</Text>;
-
   return (
     <View style={styles.container}>
       <View style={styles.innerContainer}>
@@ -207,14 +208,6 @@ const handle_FormSubmit = async (form) => {
     set_Store({ hasData: false, data: null });
   }
 };
-export function handle_subscription(setSetup) {
-  const state = Store.getState().setup;
-
-  if (state.setup && !state.loading && state.hasUserData) {
-    console.log("Store set.");
-    router.replace("home");
-  } else setSetup(state);
-}
 
 const styles = StyleSheet.create({
   container: {

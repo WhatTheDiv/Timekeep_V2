@@ -14,20 +14,19 @@ import Title from "../components/title";
 import BigButton from "../components/bigButton";
 import Drawer from "../components/drawer";
 import Counter from "../components/counter";
-import { startup, handle_subscription_home } from "../js/pageFuncs/home";
+import { startup } from "../js/pageFuncs/home";
 import { Link } from "expo-router";
 import { icons } from "../js/utils/icons.js";
 import { useImmer } from "use-immer";
 import { updateClockOnAppRestored } from "../js/utils/clock";
+import { handleSubscription_home } from "../js/pageFuncs/subscriptions";
 
 export default function home() {
   if (check_OutOfOrder()) return <ErrorFallback />;
   const state = Store.getState();
 
-  const [title, setTitle] = useState(Store.getState().setup.appName);
-  const [activeClock, setActiveClock] = useState(
-    Store.getState().ui.clock.active
-  );
+  const [title, setTitle] = useState(state.setup.appName);
+  const [activeClock, setActiveClock] = useState(false);
 
   const [pockets, setPockets] = useImmer({
     stats: {
@@ -48,25 +47,45 @@ export default function home() {
 
   useEffect(() => {
     console.log("**** home, main load");
-    AppState.addEventListener("change", () => {
-      if (AppState.currentState === "active")
-        updateClockOnAppRestored({ setTicker });
+    const active = Store.getState().ui.clock.active;
+
+    // Grabs active clock from state
+    console.log("Grabbing active clock from state: ");
+    setActiveClock(active);
+    setTicker({ hours: 0, minutes: 0, seconds: 0 });
+
+    // Handle ticker on page restore
+    AppState.addEventListener("change", () =>
+      updateClockOnAppRestored({ setTicker, AppState })
+    );
+
+    // Starts animation & ticker
+    startup({ setTitle, setTicker, activeClock: active });
+
+    // Handles change of clock state, and saves settings to AsyncStorage
+    const subscribe = handleSubscription_home({
+      setActiveClock,
+      setTicker,
+      pockets,
+      setPockets,
     });
 
-    Store.subscribe(() =>
-      handle_subscription_home({
-        setActiveClock,
-        setTicker,
-        pockets,
-        setPockets,
-      })
-    );
-    startup({ setTitle, setTicker });
+    return () => {
+      console.log("cleanup home ... ");
+      setTicker({ hours: 0, minutes: 0, seconds: 0 });
+      setActiveClock(false);
+      subscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    console.log("changing state of activeClock,  activeClock:", activeClock);
+  }, [activeClock]);
 
   return (
     <View style={styles.container}>
-      <Link push href="/settings" asChild>
+      {/* Settings Button */}
+      <Link href={"/settings"} asChild>
         <Pressable style={styles.settingsButton}>
           <Image
             style={styles.settingsButtonIcon}
@@ -74,9 +93,11 @@ export default function home() {
           ></Image>
         </Pressable>
       </Link>
+
+      {/* Components */}
       <Title />
       <BigButton title={title} activeClock={activeClock} />
-      <Counter ticker={ticker} />
+      <Counter ticker={{ ...ticker }} />
       <Drawer
         activeClock={activeClock}
         pockets={pockets}

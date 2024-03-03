@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useDispatch } from 'react-redux'
 import { set_variablesConfigured, set_setup } from '../Store/setup.js'
 import { set_clock, set_user } from '../Store/ui.js'
 import { init_settings } from '../pageFuncs/global'
@@ -54,9 +53,7 @@ export async function set_UserData(form) {
 
 export async function set_Store(formData, av) {
   const state = Store.getState()
-  const animConfigured = state.setup.animations
-  const clockConfigured = state.setup.clock
-  const databaseConfigured = state.setup.database
+  const { animConfigured, clockConfigured, databaseConfigured } = state.setup
 
   if (av) _av = av
 

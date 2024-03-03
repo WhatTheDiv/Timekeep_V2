@@ -254,7 +254,9 @@ export const getAveragesYtd = () => {
   return statsArr
 }
 
-export const updateClockOnAppRestored = ({ setTicker }) => {
+export const updateClockOnAppRestored = ({ setTicker, AppState }) => {
+  if (AppState.currentState !== "active") return
+
   console.log("App Resumed!!!! ");
   const clock = Store.getState().ui.clock
   if (clock.activeClockStartTime_millis < 0) return

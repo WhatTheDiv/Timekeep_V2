@@ -20,7 +20,6 @@ const slice = createSlice({
   initialState,
   reducers: {
     set_dataArray: (state, action) => {
-      console.log('calling set_dataArray')
       const pl = action.payload
       // Replace all --- payload = { replaceAll: true, data: [...] }
       if (pl.replaceAll && pl.data)

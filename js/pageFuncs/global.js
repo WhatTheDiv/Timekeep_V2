@@ -11,7 +11,6 @@ import { reset_data, set_settings } from "../Store/data.js";
 
 export function check_OutOfOrder() {
   const state = Store.getState().setup
-  console.log('checking out of order, setup:', state.setup)
   const notInitialized = !state.setup || !state.hasUserData
 
   // If not initialized, return true
@@ -62,6 +61,8 @@ export const reset_Database = async () => {
       // activeClockStartTime_millis: -1 ----> helper for clockOut() func in home subscription
       console.log('delete cp')
       Store.dispatch(set_clock({ active: false, activeClockStartTime_millis: -1 }))
+      Store.dispatch(set_variablesConfigured({ databaseConfigured: false }))
+      Store.dispatch(set_setup({ complete: false }))
     }
 }
 
@@ -192,13 +193,29 @@ export const deleteEveryDatabase = async () => {
   }
 }
 
-export const createNewDatabase = async () => {
-
-}
-
-export const switchDatabase = async ({ dbIndex = -1, newDb = true }) => {
+export const switchDatabase = async ({ dbName = -1, newDb = false }) => {
   // XXX
+  // set existing database: { dbIndex:currDb }
+  // set new database: { newDb:true }
+  const getUnusedDbName = async () => {
+    const arr = (await FileSystem.readDirectoryAsync(FileSystem.documentDirectory + "SQLite/"))
+      .filter((name) => name.indexOf("-journal") === -1)
+      .map((item) => Number(item.slice(2, item.indexOf("."))));
 
+    for (let i = 0; i <= arr.length; i++)
+      if (arr.indexOf(i) === -1) {
+        return i
+      }
+  }
+
+  if (newDb)
+    Store.dispatch(set_settings({ dbIndex: await getUnusedDbName() }))
+  else
+    Store.dispatch(set_settings({ dbIndex: dbName }))
+
+
+  Store.dispatch(set_variablesConfigured({ databaseConfigured: false }))
+  Store.dispatch(set_setup({ complete: false }))
 }
 
 

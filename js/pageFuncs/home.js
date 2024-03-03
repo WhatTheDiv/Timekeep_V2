@@ -4,18 +4,14 @@ import { ticker_getTicks, ticker_addOneTick } from '../utils/format.js'
 import Store from "../Store/store.js"
 import { set_clock } from '../Store/ui.js'
 import { delete_withId } from '../utils/database.js'
-import { set_dataArray, set_settings } from '../Store/data.js'
-import { sortDatabaseArray_newestStartTimesToOldest, whereToInsertIntoDbArr } from '../utils/clock.js'
-import { save_settings } from './global'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { set_dataArray } from '../Store/data.js'
+import { whereToInsertIntoDbArr } from '../utils/clock.js'
+
 
 
 /*   Startup    */
-export const startup = ({ setTitle, setTicker }) => {
+export const startup = ({ setTitle, setTicker, activeClock }) => {
   const timing = animations.timing
-
-  // Check for active clock
-  const activeClock = Store.getState().ui.clock.active
 
   // Begin phase 1, fade in big button logo
   animations.Startup()
@@ -45,34 +41,6 @@ export const startup = ({ setTitle, setTicker }) => {
   );
 }
 
-/*   Subscriptions   */
-export async function handle_subscription_home({ setActiveClock, setTicker, pockets, setPockets }) {
-  const newState = Store.getState()
-
-  // Initiates master changeClockState func, Working off flag
-  if (newState.ui.flag_setClockChanging) {
-    Store.dispatch(set_clock({ flag_setClockChanging: false }))
-    master_changeClockState({ flag_active: !newState.ui.clock.active, setActiveClock, setTicker, pockets, setPockets })
-  }
-  // Saves settings in AsyncStorage, Working off flag
-  if (newState.data.settingsChanged) {
-    await save_settings(newState.data.settings)
-    Store.dispatch(set_settings({ reset_settingsChanged: true }))
-  }
-}
-export function handle_subscription_drawer({ setHoursArr }) {
-  const newState = Store.getState()
-
-  if (newState.data.dataChanged) {
-    Store.dispatch(set_dataArray({ reset_dataChanged: true }))
-    console.log('Updating array.')
-
-    // BUG after clock in , clock out, edit does not update this even though newState is correct
-    setHoursArr([...newState.data.dataArray])
-  }
-}
-
-
 /*   Press Functions   */
 export const press_changeClockState = () => {
 
@@ -92,7 +60,6 @@ export const master_changeClockState = async ({ flag_active, setActiveClock, set
 
       // Store timestamp in database 
       const now = Date.now()
-      // [x] use master_addEntry()
       console.log('passing to master_addEntry(): ', { now, pockets, setPockets })
       const id = await master_addEntry({ startTime: now, pockets, setPockets }) // ***************************
       fallback.id = id

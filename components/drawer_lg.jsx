@@ -10,7 +10,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import gStyles from "../styles/globalStyle";
-import { sortDatabaseArray_newestStartTimesToOldest } from "../js/utils/clock.js";
 import {
   dateObj_ToMillis,
   millis_toMonthAndDayStrings,
@@ -20,8 +19,8 @@ import {
 import { icons } from "../js/utils/icons.js";
 import { Picker } from "@react-native-picker/picker";
 import Store from "../js/Store/store.js";
+import { handleSubscription_drawer } from "../js/pageFuncs/subscriptions";
 import {
-  handle_subscription_drawer,
   master_addEntry,
   master_deleteEntry,
   master_editEntry,
@@ -82,7 +81,7 @@ export default ({ pockets, setPockets }) => {
     );
     setHoursArr(Store.getState().data.dataArray);
     load({ setPockets });
-    Store.subscribe(() => handle_subscription_drawer({ setHoursArr }));
+    Store.subscribe(() => handleSubscription_drawer({ setHoursArr }));
   }, []);
 
   return (

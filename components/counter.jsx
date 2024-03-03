@@ -5,6 +5,21 @@ import * as animations from "../js/animations/mainAnimations";
 export default function Counter({ ticker }) {
   const { counter } = animations;
 
+  const seconds = ticker.seconds.toLocaleString("en-US", {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+
+  const minutes = ticker.minutes.toLocaleString("en-US", {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+
+  const hours = ticker.hours.toLocaleString("en-US", {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+
   useEffect(() => {
     // counter.animateIn();
     // counter.animateTicker_toggle("start");
@@ -21,34 +36,19 @@ export default function Counter({ ticker }) {
       ]}
     >
       <View style={styles.innerContainer}>
-        <Text style={[styles.text, {}]}>
-          {ticker.hours.toLocaleString("en-US", {
-            minimumIntegerDigits: 2,
-            useGrouping: false,
-          })}
-        </Text>
+        <Text style={[styles.text, {}]}>{hours}</Text>
         <Animated.Text
           style={[styles.divider, { opacity: counter.animate_tickerOpacity }]}
         >
           :
         </Animated.Text>
-        <Text style={[styles.text, {}]}>
-          {ticker.minutes.toLocaleString("en-US", {
-            minimumIntegerDigits: 2,
-            useGrouping: false,
-          })}
-        </Text>
+        <Text style={[styles.text, {}]}>{minutes}</Text>
         <Animated.Text
           style={[styles.divider, { opacity: counter.animate_tickerOpacity }]}
         >
           :
         </Animated.Text>
-        <Text style={[styles.text]}>
-          {ticker.seconds.toLocaleString("en-US", {
-            minimumIntegerDigits: 2,
-            useGrouping: false,
-          })}
-        </Text>
+        <Text style={[styles.text]}>{seconds}</Text>
       </View>
     </Animated.View>
   );

@@ -3,13 +3,15 @@ import ErrorFallback from "./errorFallback";
 import React, { useEffect, useState } from "react";
 import * as globalFuncs from "../js/pageFuncs/global";
 import * as FileSystem from "expo-file-system";
-import { router } from "expo-router";
+import { handleSubscription_settings } from "../js/pageFuncs/subscriptions";
+import { router, useLocalSearchParams } from "expo-router";
 import Store from "../js/Store/store";
 import { check_OutOfOrder } from "../js/pageFuncs/global";
 import gStyles from "../styles/globalStyle";
 
-export default ({ setActiveClock, setTicker }) => {
+export default () => {
   if (check_OutOfOrder()) return <ErrorFallback settingsPage={true} />;
+
   const [privacyMode, setPrivacyMode] = useState(
     Store.getState().data.settings.privacy
   );
@@ -24,15 +26,15 @@ export default ({ setActiveClock, setTicker }) => {
       dir: null,
     });
 
-    const sub = Store.subscribe(() => {
-      if (!Store.getState().setup.setup) router.replace("/");
+    const sub = Store.subscribe(() =>
+      handleSubscription_settings({ privacyMode, setPrivacyMode })
+    );
 
-      if (privacyMode !== Store.getState().data.settings.privacy)
-        setPrivacyMode(Store.getState().data.settings.privacy);
-    });
-
-    return sub;
-  });
+    return () => {
+      console.log("Cleanup settings ... ");
+      sub();
+    };
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
@@ -104,7 +106,7 @@ export default ({ setActiveClock, setTicker }) => {
           <Pressable
             onPress={() => {
               setDbValueDisplayed({
-                dir: "dec",
+                dir: "decrement",
                 currDb,
                 setCurrDb,
                 currIndex: null,
@@ -119,7 +121,7 @@ export default ({ setActiveClock, setTicker }) => {
           <Pressable
             onPress={() => {
               setDbValueDisplayed({
-                dir: "inc",
+                dir: "increment",
                 currDb,
                 setCurrDb,
                 currIndex: null,
@@ -143,9 +145,7 @@ export default ({ setActiveClock, setTicker }) => {
             </Text>
           </View>
           <Pressable
-            onPress={() =>
-              globalFuncs.switchDatabase({ dbIndex: currDb, newDb: false })
-            }
+            onPress={() => globalFuncs.switchDatabase({ dbName: currDb })}
             style={[styles.switchDbButton_container]}
           >
             <Text style={[styles.switchDbButton_text, gStyles.text_bold]}>
@@ -191,44 +191,27 @@ export default ({ setActiveClock, setTicker }) => {
 };
 
 async function setDbValueDisplayed({ dir, currDb, setCurrDb, currIndex }) {
-  const increment = (c, arr, i, len, set) => {
-    set(i + 1 >= len ? arr[0] : arr[i + 1]);
+  const direction = {
+    increment: (c, arr, i, len, set) => set(i + 1 >= len ? arr[0] : arr[i + 1]),
+    decrement: (c, arr, i, len, set) => set(i - 1 < 0 ? len - 1 : i - 1),
   };
-  const decrement = (c, arr, i, len, set) => {
-    set(i - 1 < 0 ? len - 1 : i - 1);
+  const getDbArray = async () => {
+    return (
+      await FileSystem.readDirectoryAsync(
+        FileSystem.documentDirectory + "SQLite/"
+      )
+    )
+      .filter((name) => name.indexOf("-journal") === -1)
+      .map((item) => Number(item.slice(2, item.indexOf("."))));
   };
 
-  const indexes = await getDbArray();
+  const arr = await getDbArray();
 
   const curr =
-    currIndex !== null
-      ? indexes[currIndex]
-      : indexes[indexes.indexOf(Number(currDb))];
+    currIndex !== null ? arr[currIndex] : arr[arr.indexOf(Number(currDb))];
 
-  console.log({
-    curr,
-    currIndex,
-    indexes,
-  });
-
-  if (dir === "inc") {
-    increment(curr, indexes, indexes.indexOf(curr), indexes.length, setCurrDb);
-  }
-  if (dir === "dec") {
-    decrement(curr, indexes, indexes.indexOf(curr), indexes.length, setCurrDb);
-  } else {
-    setCurrDb(curr);
-  }
-}
-
-async function getDbArray() {
-  return (
-    await FileSystem.readDirectoryAsync(
-      FileSystem.documentDirectory + "SQLite/"
-    )
-  )
-    .filter((name) => name.indexOf("-journal") === -1)
-    .map((item) => Number(item.slice(2, item.indexOf("."))));
+  if (dir === null) setCurrDb(curr);
+  else direction[dir](curr, arr, arr.indexOf(curr), arr.length, setCurrDb);
 }
 
 const styles = StyleSheet.create({
