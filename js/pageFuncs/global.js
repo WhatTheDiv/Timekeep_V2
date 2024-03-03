@@ -192,8 +192,13 @@ export const deleteEveryDatabase = async () => {
   }
 }
 
+export const createNewDatabase = async () => {
+
+}
+
 export const switchDatabase = async ({ dbIndex = -1, newDb = true }) => {
   // XXX
+
 }
 
 
