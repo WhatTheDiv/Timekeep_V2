@@ -19,12 +19,7 @@ export default () => {
   const [currDb, setCurrDb] = useState(0);
 
   useEffect(() => {
-    setDbValueDisplayed({
-      currIndex: Store.getState().data.settings.dbIndex,
-      setCurrDb,
-      currDb: null,
-      dir: null,
-    });
+    setCurrDb(Store.getState().data.settings.dbIndex);
 
     const sub = Store.subscribe(() =>
       handleSubscription_settings({ privacyMode, setPrivacyMode })
@@ -42,7 +37,7 @@ export default () => {
       <View style={styles.sectionContainer}>
         <Pressable
           style={styles.button_container}
-          onPress={() => console.table(Store.getState())}
+          onPress={globalFuncs.log_data}
         >
           <Text style={gStyles.text_bold}>Log State</Text>
         </Pressable>
@@ -192,8 +187,8 @@ export default () => {
 
 async function setDbValueDisplayed({ dir, currDb, setCurrDb, currIndex }) {
   const direction = {
-    increment: (c, arr, i, len, set) => set(i + 1 >= len ? arr[0] : arr[i + 1]),
-    decrement: (c, arr, i, len, set) => set(i - 1 < 0 ? len - 1 : i - 1),
+    increment: (arr, i, len, set) => set(i + 1 >= len ? arr[0] : arr[i + 1]),
+    decrement: (arr, i, len, set) => set(i - 1 < 0 ? arr[len - 1] : arr[i - 1]),
   };
   const getDbArray = async () => {
     return (
@@ -207,11 +202,11 @@ async function setDbValueDisplayed({ dir, currDb, setCurrDb, currIndex }) {
 
   const arr = await getDbArray();
 
+  // curr = index in arr of dbName
   const curr =
     currIndex !== null ? arr[currIndex] : arr[arr.indexOf(Number(currDb))];
 
-  if (dir === null) setCurrDb(curr);
-  else direction[dir](curr, arr, arr.indexOf(curr), arr.length, setCurrDb);
+  direction[dir](arr, arr.indexOf(curr), arr.length, setCurrDb);
 }
 
 const styles = StyleSheet.create({

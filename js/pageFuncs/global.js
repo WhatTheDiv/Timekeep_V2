@@ -17,6 +17,16 @@ export function check_OutOfOrder() {
   return notInitialized
 }
 
+export async function log_data() {
+
+  console.log('Logs: ', {
+    database_list: await FileSystem.readDirectoryAsync(
+      FileSystem.documentDirectory + "SQLite/"
+    ),
+    state: Store.getState()
+  })
+}
+
 export const delete_SettingsAndUserData = async () => {
   await AsyncStorage.multiRemove(['user-name', 'salary', 'settings'])
 
