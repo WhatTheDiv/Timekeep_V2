@@ -31,6 +31,12 @@ export default StyleSheet.create({
   text_white: {
     color: 'white'
   },
+  text_red: {
+    color: 'red',
+  },
+  text_bold: {
+    fontWeight: 'bold',
+  },
   border_orange: {
     borderWidth: 1,
     borderColor: 'orange',
@@ -38,6 +44,12 @@ export default StyleSheet.create({
   border_chocolate: {
     borderWidth: 1,
     borderColor: 'chocolate',
-  }
+  },
+  background_red: {
+    backgroundColor: 'red'
+  },
+  background_orange: {
+    backgroundColor: 'orange',
+  },
 
 })

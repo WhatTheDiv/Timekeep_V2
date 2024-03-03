@@ -177,7 +177,7 @@ function render_ytd(privacyMode) {
       (total, current) => total + (current.total > 40 ? current.total - 40 : 0),
       0
     );
-    console.log("total_OtHours: ", total_OtHours);
+
     const total_hours = totalsArray.reduce(
       (total, current) => total + current.total,
       0

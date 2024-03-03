@@ -47,6 +47,7 @@ export default function home() {
   const [ticker, setTicker] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    console.log("**** home, main load");
     AppState.addEventListener("change", () => {
       if (AppState.currentState === "active")
         updateClockOnAppRestored({ setTicker });
@@ -69,7 +70,6 @@ export default function home() {
         <Pressable style={styles.settingsButton}>
           <Image
             style={styles.settingsButtonIcon}
-            // @ts-ignore
             source={icons.SettingsIcon}
           ></Image>
         </Pressable>

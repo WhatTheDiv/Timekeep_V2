@@ -60,7 +60,6 @@ export async function handle_subscription_home({ setActiveClock, setTicker, pock
     Store.dispatch(set_settings({ reset_settingsChanged: true }))
   }
 }
-
 export function handle_subscription_drawer({ setHoursArr }) {
   const newState = Store.getState()
 
@@ -72,13 +71,7 @@ export function handle_subscription_drawer({ setHoursArr }) {
     setHoursArr([...newState.data.dataArray])
   }
 }
-// export function handle_subscription_stats({ setPrivacyMode, privacyMode }) {
-//   console.log('state change in stats: ', { privacyMode, StorePrivacy: Store.getState().data.settings.privacy })
-//   if (privacyMode !== Store.getState().data.settings.privacy) {
-//     console.log('setting privacy mode to : ', Store.getState().data.settings.privacy)
-//     setPrivacyMode(Store.getState().data.settings.privacy)
-//   }
-// }
+
 
 /*   Press Functions   */
 export const press_changeClockState = () => {

@@ -52,7 +52,7 @@ export default ({ pockets, setPockets }) => {
       },
     },
   });
-  const [hoursArr, setHoursArr] = useState(Store.getState().data.dataArray);
+  const [hoursArr, setHoursArr] = useState([]);
 
   const bus = {
     addHoursValues,
@@ -76,6 +76,11 @@ export default ({ pockets, setPockets }) => {
   };
 
   useEffect(() => {
+    console.log(
+      "drawer_lg userEffect - setting hours array: ",
+      Store.getState().data.dataArray
+    );
+    setHoursArr(Store.getState().data.dataArray);
     load({ setPockets });
     Store.subscribe(() => handle_subscription_drawer({ setHoursArr }));
   }, []);

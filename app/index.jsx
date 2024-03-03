@@ -53,6 +53,7 @@ export default () => {
 
 // INITIAL FUNCTION
 const get_Precheck = async (av) => {
+  console.log("running precheck in index ... ");
   try {
     await set_Store(null, av);
   } catch (e) {

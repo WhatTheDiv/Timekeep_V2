@@ -36,6 +36,7 @@ const slice = createSlice({
         state.database = action.payload.databaseConfigured
     },
     set_setup: (state, action) => {
+      console.log('setting setup: ', action.payload.complete)
       if (action.payload.complete)
         state.loading = false, state.setup = true
       else if (!action.payload.complete)

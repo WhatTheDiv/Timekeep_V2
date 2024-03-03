@@ -1,16 +1,12 @@
 import * as SQLite from 'expo-sqlite';
-
-const useTempNum = 2
-const tempDatabaseArr = ['db1.db', 'db2.db', 'db3.db', 'db4.db', 'db5.db', 'db6.db']
+import Store from '../Store/store'
 
 export let database = {}
 
 // Initialize database
-export function init_database() {
+export function init_database({ dbIndex }) {
   try {
-    database = SQLite.openDatabase(tempDatabaseArr[useTempNum])
-    // database = SQLite.openDatabase('db.db') // -- All the live data !!! careful !!!!
-
+    database = SQLite.openDatabase('db' + dbIndex + '.db')
     database.transaction(tx => {
       tx.executeSql(
         "CREATE TABLE IF NOT EXISTS Times (Id INTEGER PRIMARY KEY AUTOINCREMENT not null, Start INTEGER, End INTEGER);"

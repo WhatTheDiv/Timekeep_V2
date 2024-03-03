@@ -70,7 +70,7 @@ export async function set_Store(formData, av) {
     // ---------------> SET settings
     if (_settings) Store.dispatch(set_settings(_settings))
     // ---------------> SET data
-    if (_data.length > 0) Store.dispatch(set_dataArray({ replaceAll: true, data: sortDatabaseArray_newestStartTimesToOldest(_data) }))
+    Store.dispatch(set_dataArray({ replaceAll: true, data: sortDatabaseArray_newestStartTimesToOldest(_data) }))
   }
 
   // configure hasUserData
@@ -97,12 +97,14 @@ async function configureVariables(av) {
     const animationsSet = animations.initialize(av)
     console.log('Initialized animations. ')
 
-    // Initialize Database
-    const databaseSet = db.init_database()
-    console.log('Initialized database. ')
-
+    // Initialize Settings
     const settings = await init_settings()
     console.log('Initialized settings.')
+
+    // Initialize Database
+    const databaseSet = db.init_database({ dbIndex: settings.dbIndex })
+    console.log('Initialized database. ')
+
 
     // Test Database 
     const end = Date.now() // TODO use settings property 'averagesRangeEnd' for this

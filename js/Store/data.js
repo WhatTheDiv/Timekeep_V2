@@ -9,6 +9,7 @@ const initialState = {
     hoursTab_open: true,
     statsTab_open: true,
     privacy: false,
+    dbIndex: 0
   },
   settingsChanged: false,
   dataChanged: false,
@@ -81,11 +82,15 @@ const slice = createSlice({
       if (action.payload.hoursTab_open !== undefined)
         state.settings.hoursTab_open = action.payload.hoursTab_open
 
-      if (action.payload.statsTab_open !== undefined) state.settings.statsTab_open = action.payload.statsTab_open
+      if (action.payload.statsTab_open !== undefined)
+        state.settings.statsTab_open = action.payload.statsTab_open
 
-      if (action.payload.privacy !== undefined) {
+      if (action.payload.privacy !== undefined)
         state.settings.privacy = action.payload.privacy
-      }
+
+      if (action.payload.dbIndex !== undefined)
+        state.settings.dbIndex = action.payload.dbIndex
+
 
       if (action.payload.reset_settingsChanged)
         state.settingsChanged = false

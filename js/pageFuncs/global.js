@@ -1,14 +1,17 @@
 import Store from "../Store/store.js";
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system'
+import * as DocumentPicker from 'expo-document-picker';
 import { Alert } from 'react-native'
 import { delete_everythingFromDatabase, getData_totalLengthOfDatabase } from "../utils/database.js";
 import { reset_ui, set_clock } from "../Store/ui.js";
-import { reset_setup } from "../Store/setup.js";
+import { reset_setup, set_setup, set_variablesConfigured } from "../Store/setup.js";
 import { reset_data, set_settings } from "../Store/data.js";
 
 export function check_OutOfOrder() {
   const state = Store.getState().setup
-
+  console.log('checking out of order, setup:', state.setup)
   const notInitialized = !state.setup || !state.hasUserData
 
   // If not initialized, return true
@@ -24,7 +27,7 @@ export const delete_SettingsAndUserData = async () => {
 
 }
 
-export const delete_AllDatabase = async () => {
+export const reset_Database = async () => {
   const result = await new Promise(async (resolve, reject) => {
     const len = await getData_totalLengthOfDatabase()
     Alert.alert(
@@ -49,15 +52,15 @@ export const delete_AllDatabase = async () => {
 
   if (result)
     if (await delete_everythingFromDatabase().then(res => {
-      alert('Sucessfully deleted everything from the database')
+      alert('Sucessfully cleared the database')
       return true
     }).catch(e => {
-      alert(":'( Failed to delete database :'( ")
+      alert(":'( Failed to clear database :'( ")
       return false
     })) {
       //       If confirmed delete, and delete sucessful...
-      // [x] -- Cleanup data
       // activeClockStartTime_millis: -1 ----> helper for clockOut() func in home subscription
+      console.log('delete cp')
       Store.dispatch(set_clock({ active: false, activeClockStartTime_millis: -1 }))
     }
 }
@@ -100,6 +103,97 @@ export const togglePrivacyMode = () => {
   const pvcy = Store.getState().data.settings.privacy
   console.log('setting privacy mode from ', pvcy, ' to : ', !pvcy)
   Store.dispatch(set_settings({ privacy: !pvcy }))
+}
+
+export const downloadDatabase = async () => {
+
+  const dbIndex = Store.getState().data.settings.dbIndex.toString()
+  const root = FileSystem.documentDirectory
+  const dir_sqlite = 'SQLite/'
+  const fileName_db = 'db' + dbIndex + '.db'
+  const db_uri = (root + dir_sqlite + fileName_db)
+  // const data = JSON.stringify(Store.getState().data.dataArray)
+
+  try {
+    const arr = await FileSystem.readDirectoryAsync(root + dir_sqlite)
+    console.log('arr: ', arr)
+
+    const res = await Sharing.shareAsync(db_uri)
+
+    console.log('res: ', res)
+  } catch (e) {
+    alert('Failed to save database')
+    console.log(e)
+  }
+}
+
+export const importDatabase = async () => {
+  try {
+    const sqlite_uri = FileSystem.documentDirectory + 'SQLite/'
+
+    // Get all database file names
+    const arr = await FileSystem.readDirectoryAsync(sqlite_uri)
+
+    // User select file to import
+    const result = await DocumentPicker.getDocumentAsync()
+
+    const dbFile = result.assets && result.assets[0]
+
+
+    // exit early if no file picked
+    if (!dbFile) throw 'No file selected'
+
+    // exit early if database file not picked 
+    if (dbFile.name.indexOf('.db') < 0) throw ('wrong file type selected')
+
+
+    const db_uri = dbFile.uri
+
+    let index = 0
+
+    for (let i = 0; i < arr.length + 1; i++)
+      if (arr.indexOf('db' + i.toString() + '.db') === -1)
+        index = i
+
+    const filename = 'db' + index + '.db'
+
+    await FileSystem.moveAsync({ from: db_uri, to: sqlite_uri + filename })
+
+    alert('Sucessfully imported ' + dbFile.name)
+
+  } catch (e) {
+    alert('failed to import database')
+    console.error('Error @ importData: ', e)
+  }
+}
+
+export const deleteEveryDatabase = async () => {
+  try {
+    const sqlite_uri = FileSystem.documentDirectory + 'SQLite/'
+
+    // Get all database file names
+    const arr = await FileSystem.readDirectoryAsync(sqlite_uri)
+
+    arr.forEach(async item => {
+      await FileSystem.deleteAsync(sqlite_uri + item)
+    })
+
+    alert('Sucessfully deleted every database')
+
+
+    Store.dispatch(set_settings({ dbIndex: 0 }))
+    Store.dispatch(set_variablesConfigured({ databaseConfigured: false }))
+    Store.dispatch(set_setup({ complete: false }))
+
+
+
+  } catch (e) {
+
+  }
+}
+
+export const switchDatabase = async ({ dbIndex = -1, newDb = true }) => {
+  // XXX
 }
 
 
