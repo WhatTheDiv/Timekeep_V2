@@ -177,6 +177,24 @@ function render_ytd(privacyMode) {
     // totalsArray = [ {start: 1704690000002, end: 1705294800002, total: 39.983333333333334, daysWorked: 5}, ]
     const totalsArray = Clock.getAveragesYtd();
 
+    // Handle empty array of hours
+    if (totalsArray.length <= 0)
+      return {
+        total_OtHours: 0,
+        total_hours: 0,
+        average_hoursPerWeek: 0,
+        average_OtHoursPerWeek: 0,
+        shouldBe_RatePerHour: Format.dollarsPerPeriod("hourly").toFixed(2),
+        shouldBe_salary: Format.numberMaxPrecision(
+          Format.dollarsPerPeriod("yearly"),
+          0
+        ),
+        actual_RatePerHour: Format.numberMaxPrecision(
+          Format.dollarsPerPeriod("yearly"),
+          0
+        ),
+      };
+
     // [ ] check first week for incomplete week. Weigh seperately. Maybe just make a prompt to add 0 hour hours at beginning of first week
 
     // check last week for incomplete week. Do not factor incomplete week
