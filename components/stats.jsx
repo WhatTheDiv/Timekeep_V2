@@ -6,23 +6,21 @@ import * as Format from "../js/utils/format.js";
 import * as Clock from "../js/utils/clock";
 
 const stats = ({ pockets, setPockets }) => {
-  // ( Year To Date )
-  // [ ] hours this week
-  // [ ] hours last week
-  // [ ] avg $/h ( factoring overtime )
-  // [ ] avg $/h ( without overtime )
-  // [ ] average hours per week
-  // [ ] total hours over 40
-  // [ ] Should-be salary ( converted to hourly ) ( factoring overtime )
-  // [ ]
-  // [ ]
-  // [ ]
-  // [ ] selected item stats:
-  // [ ] - time range
-  // [ ] - hours this day
-  // [ ] - hours this week
-  // [ ] - OT hours this week
-  // [ ] - avg $/h this week
+  //            Year To Date
+  // [x] hours this week
+  // [x] hours last week
+  // [x] avg $/h ( factoring overtime )
+  // [x] avg $/h ( without overtime )
+  // [x] average hours per week
+  // [x] total hours over 40
+  // [x] Should-be salary ( converted to hourly ) ( factoring overtime )
+
+  //            Selected Item Stats:
+  // [x] - time range
+  // [x] - hours this day
+  // [x] - hours this week
+  // [x] - OT hours this week
+  // [x] - avg $/h this week
   // [ ] - delete, edit
 
   const privacyMode = Store.getState().data.settings.privacy;
@@ -71,13 +69,13 @@ function render_selection({ stats }, privacyMode) {
       )
     );
     const hoursThisWeek = hours + minutes / 60;
-    const regular = hoursThisWeek.toFixed(1);
+    const regular = Format.numberMaxPrecision(hoursThisWeek, 1);
     const ot = hoursThisWeek > 40 ? hoursThisWeek - 40 : 0;
 
     const hourlyRate =
       Clock.findHourlyEquivalent_factoringOt_OneWeek(array).toFixed(2);
 
-    return { regular, ot: ot.toFixed(1), hourlyRate };
+    return { regular, ot: Format.numberMaxPrecision(ot, 1), hourlyRate };
   };
 
   const currentItem = Store.getState().data.dataArray[stats.selected];
@@ -143,7 +141,6 @@ function render_selection({ stats }, privacyMode) {
     </View>
   );
 }
-// XXX
 function render_ytd(privacyMode) {
   const getAverages = () => {
     const getActual_RatePerHour = (len, totalOt, totalHours) => {
@@ -151,9 +148,10 @@ function render_ytd(privacyMode) {
 
       const dollarsPaidForDuration = len * dollarsPerWeek;
 
-      if (totalHours >= 40 * len) return dollarsPaidForDuration / totalHours;
-      else {
-        const fullTimeHours = 40 * len;
+      if (totalOt <= 0) {
+        return dollarsPaidForDuration / totalHours;
+      } else {
+        const fullTimeHours = totalHours - totalOt;
         return dollarsPaidForDuration / (fullTimeHours + 1.5 * totalOt);
       }
     };
@@ -161,17 +159,28 @@ function render_ytd(privacyMode) {
       const hoursInAWorkWeek = 40;
       const dollarsPerWeek = Format.dollarsPerPeriod("weekly");
       const dollarsPaidForDuration = len * dollarsPerWeek;
+      const regularHours = totalHours - totalOt;
 
       if (totalOt <= 0) {
         return dollarsPaidForDuration / totalHours;
       }
 
-      return (
-        (ratePerHour * (totalHours + 1.5 * totalOt)) / len / hoursInAWorkWeek
-      );
+      const otHourEquiv = 1.5 * totalOt;
+      const effectiveHours = regularHours + otHourEquiv;
+      const totalPaidForDurationIfHourly = ratePerHour * effectiveHours;
+      const averagePaidPerWeek = totalPaidForDurationIfHourly / len;
+      const effectiveSalaryHourlyRate = averagePaidPerWeek / hoursInAWorkWeek;
+
+      return effectiveSalaryHourlyRate;
     };
 
+    // totalsArray = [ {start: 1704690000002, end: 1705294800002, total: 39.983333333333334, daysWorked: 5}, ]
     const totalsArray = Clock.getAveragesYtd();
+
+    // [ ] check first week for incomplete week. Weigh seperately. Maybe just make a prompt to add 0 hour hours at beginning of first week
+
+    // check last week for incomplete week. Do not factor incomplete week
+    if (totalsArray[totalsArray.length - 1].incomplete) totalsArray.pop();
 
     const total_OtHours = totalsArray.reduce(
       (total, current) => total + (current.total > 40 ? current.total - 40 : 0),
@@ -213,11 +222,15 @@ function render_ytd(privacyMode) {
   };
 
   const { start, total } = Clock.getTotalWeeklyHours(Date.now());
-  const hoursThisWeek = total.toFixed(1);
-  const hoursLastWeek = Clock.getTotalWeeklyHours(start - 1000).total.toFixed(
+  const hoursThisWeek = Format.numberMaxPrecision(total, 1);
+  const hoursLastWeek = Format.numberMaxPrecision(
+    Clock.getTotalWeeklyHours(start - 1000).total,
     1
   );
-  const RatePerYear = Format.dollarsPerPeriod("yearly");
+  const RatePerYear = Format.numberMaxPrecision(
+    Format.dollarsPerPeriod("yearly"),
+    0
+  );
   const RatePerHour = Format.dollarsPerPeriod("hourly").toFixed(2);
 
   const {
@@ -228,7 +241,6 @@ function render_ytd(privacyMode) {
     shouldBe_RatePerHour,
     shouldBe_salary,
     actual_RatePerHour,
-    actual_salary,
   } = getAverages();
 
   return (

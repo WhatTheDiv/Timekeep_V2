@@ -162,3 +162,50 @@ export const dollarsPerPeriod = (period) => {
     return salary / 52 / 40
   else return salary
 }
+
+export const numberMaxPrecision = (num, precision) => {
+  // 41.0 = 41
+  // 41.19939 = 41.1
+
+  // Exit early if num is NaN
+  if (isNaN(num))
+    return num
+
+  const numberString = num.toString()
+  const safeNumber = numberString.concat(Array(precision).fill(0).join(''))
+
+  // Get index of decimal
+  const index = numberString.indexOf('.')
+
+  // If no decimal return whole number string
+  if (index === -1)
+    return numberString
+
+  // If (precision) = 0, return whole number string
+  // If (precision) = (number) && all characters are 0's
+  else if (precision <= 0 || Number(numberString.slice(index + 1, index + 1 + precision)) <= 0)
+    return numberString.slice(0, index)
+
+  const decimalNumber = safeNumber.slice(index + 1, index + 1 + precision)
+  const arr = decimalNumber.split('')
+  arr.reverse()
+  const significantDigitIndex_reversed = arr.find(n => n > 0)
+
+  // Exit early if it is safe to truncate
+  if (significantDigitIndex_reversed === undefined)
+    return safeNumber.slice(0, index + 1 + precision)
+
+  arr.reverse()
+  const i = arr.findLastIndex(n => n === significantDigitIndex_reversed)
+  const newNumberWithPrecisionTruncated = safeNumber.slice(0, index + 1 + i + 1)
+
+
+  return newNumberWithPrecisionTruncated
+
+
+
+
+
+
+
+}

@@ -224,33 +224,63 @@ export const findHourlyEquivalent_factoringOt_OneWeek = (array) => {
 }
 
 export const getTotalWeeklyHours = (flag_millis) => {
+
+  // Sum up all hours during period
   const { beginningOfWeek_millis, endOfWeek_millis, array } =
     filterDatabase_WeekSegment_givenFlag(flag_millis);
   const { hours, minutes } = Format.millis_toSecondsMinutesHours(array.reduce(
-    (total, current) => total + current.End - current.Start,
+    (total, current) => total + (current.End < 0 ? 0 : current.End - current.Start),
     0
   ))
 
-  const total = hours + (minutes / 60)
-  return { start: beginningOfWeek_millis, end: endOfWeek_millis, total }
+  const allDaysArr_filtered = [];
+
+  // Create array of days worked
+  array.map(item => new Date(item.Start).getDay())
+    .forEach((day) =>
+      allDaysArr_filtered.indexOf(day) === -1
+      && allDaysArr_filtered.push(day)
+    )
+
+
+
+
+  // Get decimal value of hours worked factoring hours + minutes 
+  const totalHours = hours + (minutes / 60)
+
+  const returnObj = { start: beginningOfWeek_millis, end: endOfWeek_millis, total: totalHours, daysWorked: allDaysArr_filtered.length }
+
+  // Label this week as incomplete if incomplete
+  if (Date.now() >= beginningOfWeek_millis && Date.now() < endOfWeek_millis && allDaysArr_filtered.length < 5)
+    returnObj.incomplete = true
+
+  return returnObj
 }
 
 // TODO factor holidays, PTO, sick days here
 export const getAveragesYtd = () => {
   const rangeStart = Store.getState().data.settings.averagesRangeStart
   const rangeEnd = Store.getState().data.settings.averagesRangeEnd
-  const statsArr = []
   const flag_end = rangeEnd === 'current' ? Date.now() : rangeEnd
+  const statsArr = []
   let flag_start = rangeStart
 
+  // Add hours on per week basis and push to array
   while (flag_start <= flag_end) {
     flag_start = statsArr[statsArr.push(getTotalWeeklyHours(flag_start)) - 1].end + 1000
   }
 
-  // getter is finding dates before beginning of year, maybe not an issue
-  // getter is finding dates in range from friday - friday, i think ? 
+  // Trim any first weeks without hours until first week with hours
+  for (let i = 0; i < statsArr.length; i++) {
+    if (statsArr[i].daysWorked === 0) {
+      statsArr.shift()
+      i--
+    }
+    else break;
+  }
 
   // console.log('***** statsArr: ', statsArr)
+
   return statsArr
 }
 
