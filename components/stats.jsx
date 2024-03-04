@@ -189,10 +189,7 @@ function render_ytd(privacyMode) {
           Format.dollarsPerPeriod("yearly"),
           0
         ),
-        actual_RatePerHour: Format.numberMaxPrecision(
-          Format.dollarsPerPeriod("yearly"),
-          0
-        ),
+        actual_RatePerHour: Format.dollarsPerPeriod("hourly").toFixed(2),
       };
 
     // [ ] check first week for incomplete week. Weigh seperately. Maybe just make a prompt to add 0 hour hours at beginning of first week
