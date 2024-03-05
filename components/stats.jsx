@@ -34,6 +34,26 @@ const stats = ({ pockets, setPockets }) => {
 };
 
 /*      Render       */
+function render_percentChangeText({ pos, pct, prs, fixed }) {
+  return (
+    <Text
+      style={[
+        gStyles.text_xSmall,
+        gStyles[pos ? "text_green" : "text_red"],
+        {
+          padding: 25,
+        },
+      ]}
+    >
+      {pos ? "+ " : "- "}
+      {fixed ? Number(pct).toFixed(prs) : Format.numberMaxPrecision(pct, prs)}%
+      {"   "}
+    </Text>
+  );
+}
+function render_sectionDetail(text) {
+  return <Text style={[gStyles.text_xSmall, gStyles.text_gray]}>({text})</Text>;
+}
 function render_selection({ stats }, privacyMode) {
   // Exit early if hours item is not selected
   if (stats.selected === null) return;
@@ -72,10 +92,15 @@ function render_selection({ stats }, privacyMode) {
     const regular = Format.numberMaxPrecision(hoursThisWeek, 1);
     const ot = hoursThisWeek > 40 ? hoursThisWeek - 40 : 0;
 
-    const hourlyRate =
-      Clock.findHourlyEquivalent_factoringOt_OneWeek(array).toFixed(2);
+    const { hourlyRate, fullWeek } =
+      Clock.findHourlyEquivalent_factoringOt_OneWeek(array);
 
-    return { regular, ot: Format.numberMaxPrecision(ot, 1), hourlyRate };
+    return {
+      regular,
+      ot: Format.numberMaxPrecision(ot, 1),
+      hourlyRate: hourlyRate.toFixed(2),
+      fullWeek,
+    };
   };
 
   const currentItem = Store.getState().data.dataArray[stats.selected];
@@ -90,7 +115,25 @@ function render_selection({ stats }, privacyMode) {
     { trim: true }
   );
 
-  const { regular, ot, hourlyRate } = format_hoursThisWeek(currentItem);
+  const { regular, ot, hourlyRate, fullWeek } =
+    format_hoursThisWeek(currentItem);
+  const currRate = Number(Format.dollarsPerPeriod("hourly"));
+  const hoursInAWorkWeek = 40;
+
+  const pctChange_hoursThisWeek = {
+    pos: Number(regular + ot) >= Number(hoursInAWorkWeek),
+  };
+  const pctChange_hourlyRate = {
+    pos: Number(hourlyRate) >= currRate,
+  };
+
+  pctChange_hoursThisWeek.pct = pctChange_hoursThisWeek.pos
+    ? (Number(regular) / Number(hoursInAWorkWeek) - 1) * 100
+    : (Number(hoursInAWorkWeek) / Number(regular) - 1) * 100;
+
+  pctChange_hourlyRate.pct = pctChange_hourlyRate.pos
+    ? (Number(hourlyRate) / Number(currRate) - 1) * 100
+    : (Number(currRate) / Number(hourlyRate) - 1) * 100;
 
   return (
     <View style={styles.section}>
@@ -109,33 +152,46 @@ function render_selection({ stats }, privacyMode) {
         </Text>
       </View>
 
-      {/* Hours this week */}
+      {/* Hours (Selected Week) */}
       <View style={styles.row}>
         <Text style={[gStyles.text_small, gStyles.text_white]}>
-          Hours (Selected Week)
+          Hours {render_sectionDetail("Selected Week")}
         </Text>
         <Text style={[gStyles.text_small, gStyles.text_white, styles.col2]}>
+          {fullWeek &&
+            render_percentChangeText({
+              pos: pctChange_hoursThisWeek.pos,
+              pct: pctChange_hoursThisWeek.pct,
+              prs: 1,
+              fixed: false,
+            })}
           {regular}
         </Text>
       </View>
 
-      {/* OT Hours this week */}
+      {/* OT Hours (Selected Week) */}
       <View style={styles.row}>
         <Text style={[gStyles.text_small, gStyles.text_white]}>
-          OT Hours (Selected Week)
+          OT Hours {render_sectionDetail("Selected Week")}
         </Text>
         <Text style={[gStyles.text_small, gStyles.text_white, styles.col2]}>
           {ot}
         </Text>
       </View>
 
-      {/* Hourly equivelant */}
+      {/* True Rate / Hour (Selected Week) */}
       <View style={styles.row}>
         <Text style={[gStyles.text_small, gStyles.text_white]}>
-          True Rate / Hour (Selected Week)
+          True Rate / Hour {render_sectionDetail("Selected Week")}
         </Text>
         <Text style={[gStyles.text_small, gStyles.text_white, styles.col2]}>
-          ${privacyMode ? "**.**" : hourlyRate}
+          {render_percentChangeText({
+            pos: pctChange_hourlyRate.pos,
+            pct: pctChange_hourlyRate.pct,
+            prs: 1,
+            fixed: false,
+          })}
+          {privacyMode ? " -" : "$" + hourlyRate}
         </Text>
       </View>
     </View>
@@ -206,6 +262,11 @@ function render_ytd(privacyMode) {
       (total, current) => total + current.total,
       0
     );
+
+    console.log("totals Array : ", totalsArray);
+    console.log("total_OtHours : ", total_OtHours);
+    console.log("total_hours : ", total_hours);
+
     const arph = getActual_RatePerHour(
       totalsArray.length,
       total_OtHours,
@@ -225,10 +286,13 @@ function render_ytd(privacyMode) {
     const actual_salary = arph * 40 * 52;
 
     return {
-      total_OtHours: total_OtHours.toFixed(1),
-      total_hours: total_hours.toFixed(1),
-      average_hoursPerWeek: average_hoursPerWeek.toFixed(1),
-      average_OtHoursPerWeek: average_OtHoursPerWeek.toFixed(1),
+      total_OtHours: Format.numberMaxPrecision(total_OtHours, 1),
+      total_hours: Format.numberMaxPrecision(total_hours, 1),
+      average_hoursPerWeek: Format.numberMaxPrecision(average_hoursPerWeek, 1),
+      average_OtHoursPerWeek: Format.numberMaxPrecision(
+        average_OtHoursPerWeek,
+        1
+      ),
       shouldBe_RatePerHour: shouldBe_RatePerHour.toFixed(2),
       shouldBe_salary: shouldBe_salary.toFixed(0),
       actual_RatePerHour: actual_RatePerHour.toFixed(2),
@@ -258,6 +322,37 @@ function render_ytd(privacyMode) {
     actual_RatePerHour,
   } = getAverages();
 
+  const hoursInAWorkWeek = 40;
+
+  const pctChange_shouldBe_RatePerHour = {
+    pos: Number(shouldBe_RatePerHour) >= Number(RatePerHour),
+  };
+  const pctChange_actual_RatePerHour = {
+    pos: Number(actual_RatePerHour) >= Number(RatePerHour),
+  };
+  const pctChange_average_hoursPerWeek = {
+    pos: Number(average_hoursPerWeek) >= Number(hoursInAWorkWeek),
+  };
+  const pctChange_average_hoursLastWeek = {
+    pos: Number(hoursLastWeek) >= Number(hoursInAWorkWeek),
+  };
+
+  pctChange_shouldBe_RatePerHour.pct = pctChange_shouldBe_RatePerHour.pos
+    ? (Number(shouldBe_RatePerHour) / Number(RatePerHour) - 1) * 100
+    : (Number(RatePerHour) / Number(shouldBe_RatePerHour) - 1) * 100;
+
+  pctChange_actual_RatePerHour.pct = pctChange_actual_RatePerHour.pos
+    ? (Number(actual_RatePerHour) / Number(RatePerHour) - 1) * 100
+    : (Number(RatePerHour) / Number(actual_RatePerHour) - 1) * 100;
+
+  pctChange_average_hoursPerWeek.pct = pctChange_average_hoursPerWeek.pos
+    ? (Number(average_hoursPerWeek) / Number(hoursInAWorkWeek) - 1) * 100
+    : (Number(hoursInAWorkWeek) / Number(average_hoursPerWeek) - 1) * 100;
+
+  pctChange_average_hoursLastWeek.pct = pctChange_average_hoursLastWeek.pos
+    ? (Number(hoursLastWeek) / Number(hoursInAWorkWeek) - 1) * 100
+    : (Number(hoursInAWorkWeek) / Number(hoursLastWeek) - 1) * 100;
+
   return (
     <View style={styles.section}>
       <Text
@@ -269,7 +364,7 @@ function render_ytd(privacyMode) {
       {/* Hours this week */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Hours (This Week)
+          Hours {render_sectionDetail("This Week")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
           {hoursThisWeek}
@@ -279,9 +374,15 @@ function render_ytd(privacyMode) {
       {/* Hours last week */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Hours (Last Week)
+          Hours {render_sectionDetail("Last Week")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
+          {render_percentChangeText({
+            pos: pctChange_average_hoursLastWeek.pos,
+            pct: pctChange_average_hoursLastWeek.pct,
+            prs: 1,
+            fixed: false,
+          })}
           {hoursLastWeek}
         </Text>
       </View>
@@ -289,7 +390,7 @@ function render_ytd(privacyMode) {
       {/* YTD Hours */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Hours (Year To Date)
+          Hours {render_sectionDetail("Year To Date")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
           {total_hours}
@@ -299,9 +400,15 @@ function render_ytd(privacyMode) {
       {/* Avg Hours per week */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Hours / Week (Average)
+          Hours / Week {render_sectionDetail("Average")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
+          {render_percentChangeText({
+            pos: pctChange_average_hoursPerWeek.pos,
+            pct: pctChange_average_hoursPerWeek.pct,
+            prs: 1,
+            fixed: false,
+          })}
           {average_hoursPerWeek}
         </Text>
       </View>
@@ -309,17 +416,18 @@ function render_ytd(privacyMode) {
       {/* YTD OT */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          OT (Year To Date)
+          OT {render_sectionDetail("Year To Date")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
           {total_OtHours}
         </Text>
       </View>
 
+      {/* //BUG  with result compared to avg hours per week */}
       {/* Average OT / Week */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          OT / Week (Average)
+          OT / Week {render_sectionDetail("Average")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
           {average_OtHoursPerWeek}
@@ -329,54 +437,66 @@ function render_ytd(privacyMode) {
       {/* $/h */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Rate / Hour
+          Rate / Hour {render_sectionDetail("Current")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
-          ${privacyMode ? "**.**" : RatePerHour}
+          {privacyMode ? " -" : "$" + RatePerHour}
         </Text>
       </View>
 
       {/* Should-be $/h */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Rate / Hour (Should-be)
+          Rate / Hour {render_sectionDetail("Should-be")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
-          ${privacyMode ? "**.**" : shouldBe_RatePerHour}
+          {render_percentChangeText({
+            pos: pctChange_shouldBe_RatePerHour.pos,
+            pct: pctChange_shouldBe_RatePerHour.pct,
+            prs: 1,
+            fixed: false,
+          })}
+          {privacyMode ? " -" : "$" + shouldBe_RatePerHour}
         </Text>
       </View>
 
       {/* Actual $/h */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Rate / Hour (True)
+          Rate / Hour {render_sectionDetail("True")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
-          ${privacyMode ? "**.**" : actual_RatePerHour}
+          {render_percentChangeText({
+            pos: pctChange_actual_RatePerHour.pos,
+            pct: pctChange_actual_RatePerHour.pct,
+            prs: 1,
+            fixed: false,
+          })}
+          {privacyMode ? " -" : "$" + actual_RatePerHour}
         </Text>
       </View>
 
       {/* salary */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Rate / Year
+          Rate / Year {render_sectionDetail("Current")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
-          $
-          {privacyMode ? "**,***" : Number(RatePerYear).toLocaleString("en-US")}
+          {privacyMode
+            ? " -"
+            : "$" + Number(RatePerYear).toLocaleString("en-US")}
         </Text>
       </View>
 
       {/* Should-be salary */}
       <View style={styles.row}>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col1]}>
-          Rate / Year (Should-be)
+          Rate / Year {render_sectionDetail("Should-be")}
         </Text>
         <Text style={[gStyles.text_white, gStyles.text_small, styles.col2]}>
-          $
           {privacyMode
-            ? "**,***"
-            : Number(shouldBe_salary).toLocaleString("en-US")}
+            ? " -"
+            : "$" + Number(shouldBe_salary).toLocaleString("en-US")}
         </Text>
       </View>
     </View>

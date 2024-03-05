@@ -231,10 +231,10 @@ export const findHourlyEquivalent_factoringOt_OneWeek = (array) => {
   const dollarsThisPeriod = dollarsPerDay * allDaysArr_filtered.length
   const fullWeek = allDaysArr_filtered.length >= 5
 
-  if (hoursThisWeek <= 40) return ((fullWeek ? dollarsPerWeek : dollarsThisPeriod) / hoursThisWeek)
+  if (hoursThisWeek <= 40) return { fullWeek: allDaysArr_filtered.length >= 5 || hoursThisWeek >= 40, hourlyRate: ((fullWeek ? dollarsPerWeek : dollarsThisPeriod) / hoursThisWeek) }
   else {
     const ot = hoursThisWeek - 40
-    return (fullWeek ? dollarsPerWeek : dollarsThisPeriod) / (40 + (1.5 * ot))
+    return { fullWeek: true, hourlyRate: (fullWeek ? dollarsPerWeek : dollarsThisPeriod) / (40 + (1.5 * ot)) }
   }
 }
 
@@ -256,9 +256,6 @@ export const getTotalWeeklyHours = (flag_millis) => {
       allDaysArr_filtered.indexOf(day) === -1
       && allDaysArr_filtered.push(day)
     )
-
-
-
 
   // Get decimal value of hours worked factoring hours + minutes 
   const totalHours = hours + (minutes / 60)

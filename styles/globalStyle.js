@@ -34,6 +34,9 @@ export default StyleSheet.create({
   text_red: {
     color: 'red',
   },
+  text_green: {
+    color: 'green'
+  },
   text_bold: {
     fontWeight: 'bold',
   },
