@@ -208,18 +208,33 @@ export const getTimeOfDay_millis = (flag) => {
 export const findHourlyEquivalent_factoringOt_OneWeek = (array) => {
   const dollarsPerWeek = Format.dollarsPerPeriod('weekly')
 
+  const allDaysArr_filtered = [];
+
+  // Create array of days worked
+  array.map(item => new Date(item.Start).getDay())
+    .forEach((day) =>
+      allDaysArr_filtered.indexOf(day) === -1
+      && allDaysArr_filtered.push(day)
+    )
+
+
+
   const { minutes, hours } = Format.millis_toSecondsMinutesHours(
     array.reduce(
       (total, curr) => total + (Number(curr.End) - Number(curr.Start)),
       0
     )
   );
+  console.log('array: ', array)
   const hoursThisWeek = hours + minutes / 60;
+  const dollarsPerDay = Format.dollarsPerPeriod('daily')
+  const dollarsThisPeriod = dollarsPerDay * allDaysArr_filtered.length
+  const fullWeek = allDaysArr_filtered.length >= 5
 
-  if (hoursThisWeek <= 40) return dollarsPerWeek / hoursThisWeek
+  if (hoursThisWeek <= 40) return ((fullWeek ? dollarsPerWeek : dollarsThisPeriod) / hoursThisWeek)
   else {
     const ot = hoursThisWeek - 40
-    return dollarsPerWeek / (40 + (1.5 * ot))
+    return (fullWeek ? dollarsPerWeek : dollarsThisPeriod) / (40 + (1.5 * ot))
   }
 }
 
