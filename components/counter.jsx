@@ -20,11 +20,6 @@ export default function Counter({ ticker }) {
     useGrouping: false,
   });
 
-  useEffect(() => {
-    // counter.animateIn();
-    // counter.animateTicker_toggle("start");
-  }, []);
-
   const calculatedTop =
     animations.screen.width * 0.25 + animations.screen.height * 0.5;
 

@@ -6,23 +6,6 @@ import * as Format from "../js/utils/format.js";
 import * as Clock from "../js/utils/clock";
 
 const stats = ({ pockets, setPockets }) => {
-  //            Year To Date
-  // [x] hours this week
-  // [x] hours last week
-  // [x] avg $/h ( factoring overtime )
-  // [x] avg $/h ( without overtime )
-  // [x] average hours per week
-  // [x] total hours over 40
-  // [x] Should-be salary ( converted to hourly ) ( factoring overtime )
-
-  //            Selected Item Stats:
-  // [x] - time range
-  // [x] - hours this day
-  // [x] - hours this week
-  // [x] - OT hours this week
-  // [x] - avg $/h this week
-  // [ ] - delete, edit
-
   const privacyMode = Store.getState().data.settings.privacy;
 
   return (
